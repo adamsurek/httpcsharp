@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HTTPCSharp.Core", "HTTPCSharp.Core\HTTPCSharp.Core.csproj", "{20B1FB4D-58C9-4690-B3D8-E46AE351CB8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HTTPCSharp.CLI", "HTTPCSharp.CLI\HTTPCSharp.CLI.csproj", "{22CCB3CB-F9A3-4858-93A0-07E43BC0F5C2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{20B1FB4D-58C9-4690-B3D8-E46AE351CB8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20B1FB4D-58C9-4690-B3D8-E46AE351CB8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20B1FB4D-58C9-4690-B3D8-E46AE351CB8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20B1FB4D-58C9-4690-B3D8-E46AE351CB8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22CCB3CB-F9A3-4858-93A0-07E43BC0F5C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22CCB3CB-F9A3-4858-93A0-07E43BC0F5C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22CCB3CB-F9A3-4858-93A0-07E43BC0F5C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22CCB3CB-F9A3-4858-93A0-07E43BC0F5C2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
