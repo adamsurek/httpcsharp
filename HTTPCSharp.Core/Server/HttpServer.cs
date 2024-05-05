@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using HTTPCSharp.Core.Requests;
 
 namespace HTTPCSharp.Core.Server;
 
@@ -32,6 +33,12 @@ public class HttpServer
 			int received = client.Receive(buffer);
 			message += Encoding.UTF8.GetString(buffer, 0, received);
 			Console.WriteLine($"Received >> \n{message}");
+
+			Lexer lexer = new(buffer);
+			RequestParser requestParser = new(lexer);
+			var requestLine = requestParser.Parse().RequestLine;
+			
+			Console.WriteLine($"Request Method: {requestLine.Method}\tURI: {requestLine.RequestUri}\tVersion: {requestLine.HttpVersion}");
 			
 			string responseString = $"HTTP/1.1 \r\nComment: Test\r\n\r\n{message}\r\n";
 			byte[] response = Encoding.UTF8.GetBytes(responseString);
