@@ -53,6 +53,10 @@ public class Lexer
 				token = new(TokenEnum.Dot, _currentChar.ToString());
 				break;
 			
+			case '\0':
+				token = new Token(TokenEnum.Null, _currentChar.ToString());
+				break;
+			
 			default:
 				if (Char.IsDigit(_currentChar))
 				{
@@ -88,7 +92,7 @@ public class Lexer
 	private string ReadString()
 	{
 		int startPosition = _position;
-		while (_currentChar != ':' && _currentChar != ' ' && _currentChar != '/' && _currentChar != '\r')
+		while (_currentChar != ':' && _currentChar != ' ' && _currentChar != '/' && _currentChar != '\r' && _currentChar != '\0')
 		{
 			ReadByte();
 		}
@@ -99,7 +103,7 @@ public class Lexer
 	private int ReadInteger()
 	{
 		int startPosition = _position;
-		while (_currentChar != '.' && Char.IsAsciiDigit(_currentChar))
+		while (_currentChar != '.' && _currentChar != '\0' && Char.IsAsciiDigit(_currentChar))
 		{
 			ReadByte();
 		}

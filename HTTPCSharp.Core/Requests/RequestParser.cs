@@ -47,12 +47,9 @@ public class RequestParser
 
 	private RequestLine ParseRequestLine()
 	{
-		RequestMethodEnum method;
-		string requestUri;
-
-		method = ParseHttpMethod();
+		RequestMethodEnum method = ParseHttpMethod();
 		
-		requestUri = _currentToken.TokenLiteral;
+		string requestUri = _currentToken.TokenLiteral;
 		
 		NextToken(); // SP
 
