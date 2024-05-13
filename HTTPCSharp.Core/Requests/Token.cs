@@ -3,9 +3,9 @@
 public class Token
 {
 	public TokenEnum TokenType;
-	public string TokenLiteral;
+	public byte[] TokenLiteral;
 
-	public Token(TokenEnum tokenType, string tokenLiteral)
+	public Token(TokenEnum tokenType, byte[] tokenLiteral)
 	{
 		TokenType = tokenType;
 		TokenLiteral = tokenLiteral;

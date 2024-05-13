@@ -30,17 +30,20 @@ public class HttpServer
 			Socket client = _listener.Accept();
 			Console.WriteLine($"Client Connected: {client.Connected}");
 
-			int received = client.Receive(buffer);
+			int received = client.Receive(buffer, SocketFlags.None);
 			message += Encoding.UTF8.GetString(buffer, 0, received);
 			Console.WriteLine($"Received >> \n{message}");
 
-			Lexer lexer = new(buffer);
-			RequestParser requestParser = new(lexer);
-			var requestLine = requestParser.Parse().RequestLine;
+			// Lexer lexer = new(buffer);
+			// RequestParser requestParser = new(lexer);
+			// var requestLine = requestParser.Parse().RequestLine;
+
+			RequestParser parser = new(buffer);
+			RequestLine requestLine = parser.Parse().RequestLine;
 			
-			Console.WriteLine($"Request Method: {requestLine.Method}\tURI: {requestLine.RequestUri}\tVersion: {requestLine.HttpVersion}");
+			Console.WriteLine($"Request Method: {requestLine.Method}\tURI: path - {requestLine.RequestUri.Path}, query - {requestLine.RequestUri.Query}\tVersion: {requestLine.HttpVersion}");
 			
-			string responseString = $"HTTP/1.1 \r\nComment: Test\r\n\r\n{message}\r\n";
+			string responseString = $"HTTP/1.1 200 OK \r\nComment: Test\r\n\r\n{message}\r\n";
 			byte[] response = Encoding.UTF8.GetBytes(responseString);
 			client.Send(response);
 			

@@ -6,43 +6,43 @@ namespace HTTPCSharp.Tests.Requests;
 public class RequestLineParsingTests
 {
 	[Theory]
-	[InlineData("OPTIONS / HTTP/1.1", RequestMethodEnum.Options)]
-	[InlineData("GET / HTTP/1.1", RequestMethodEnum.Get)]
-	[InlineData("HEAD / HTTP/1.1", RequestMethodEnum.Head)]
-	[InlineData("POST / HTTP/1.1", RequestMethodEnum.Post)]
-	[InlineData("PUT / HTTP/1.1", RequestMethodEnum.Put)]
-	[InlineData("DELETE / HTTP/1.1", RequestMethodEnum.Delete)]
-	[InlineData("TRACE / HTTP/1.1", RequestMethodEnum.Trace)]
-	[InlineData("CONNECT / HTTP/1.1", RequestMethodEnum.Connect)]
+	[InlineData("OPTIONS / HTTP/1.1\r\n", RequestMethodEnum.Options)]
+	[InlineData("GET / HTTP/1.1\r\n", RequestMethodEnum.Get)]
+	[InlineData("HEAD / HTTP/1.1\r\n", RequestMethodEnum.Head)]
+	[InlineData("POST / HTTP/1.1\r\n", RequestMethodEnum.Post)]
+	[InlineData("PUT / HTTP/1.1\r\n", RequestMethodEnum.Put)]
+	[InlineData("DELETE / HTTP/1.1\r\n", RequestMethodEnum.Delete)]
+	[InlineData("TRACE / HTTP/1.1\r\n", RequestMethodEnum.Trace)]
+	[InlineData("CONNECT / HTTP/1.1\r\n", RequestMethodEnum.Connect)]
 	public void RequestLineParsing_ReturnsCorrectHTTPMethod(string requestLine, RequestMethodEnum expectedMethod)
 	{
 		byte[] bytes = Encoding.UTF8.GetBytes(requestLine);
-		Lexer lexer = new(bytes);
-		RequestParser parser = new(lexer);
+		RequestParser parser = new(bytes);
 
 		Assert.Equal(expectedMethod, parser.Parse().RequestLine.Method);
 	}
 	
 	[Theory]
-	[InlineData("GET / HTTP/1.1", "/")]
-	[InlineData("GET /test HTTP/1.1", "/test")]
+	[InlineData("GET / HTTP/1.1\r\n", "/")]
+	[InlineData("GET /test HTTP/1.1\r\n", "/test")]
+	[InlineData("GET /test/test2/test/3 HTTP/1.1\r\n", "/test/test2/test/3")]
+	[InlineData("HEAD /test123/ HTTP/1.1\r\n", "/test123/")]
 	public void RequestLineParsing_ReturnsCorrectUri(string requestLine, string expectedUri)
 	{
 		byte[] bytes = Encoding.UTF8.GetBytes(requestLine);
-		Lexer lexer = new(bytes);
-		RequestParser parser = new(lexer);
+		RequestParser parser = new(bytes);
+		RequestLine parsed = parser.Parse().RequestLine;
 
-		Assert.Equal(expectedUri, parser.Parse().RequestLine.RequestUri);
+		Assert.Equal(expectedUri, parsed.RequestUri.ToString());
 	}
 	
 	[Theory]
-	[InlineData("GET / HTTP/1.0", 1, 0)]
-	[InlineData("GET / HTTP/1.1", 1, 1)]
+	[InlineData("GET / HTTP/1.0\r\n", 1, 0)]
+	[InlineData("GET / HTTP/1.1\r\n", 1, 1)]
 	public void RequestLineParsing_ReturnsCorrectHttpVersion(string requestLine, int majorVersion, int minorVersion)
 	{
 		byte[] bytes = Encoding.UTF8.GetBytes(requestLine);
-		Lexer lexer = new(bytes);
-		RequestParser parser = new(lexer);
+		RequestParser parser = new(bytes);
 		RequestLine parsed = parser.Parse().RequestLine;
 
 		Assert.Multiple(
