@@ -92,6 +92,7 @@ public class Lexer
 	private string ReadString()
 	{
 		int startPosition = _position;
+		// TODO: Improve this - seems janky
 		while (_currentChar != ':' && _currentChar != ' ' && _currentChar != '/' && _currentChar != '\r' && _currentChar != '\0')
 		{
 			ReadByte();
@@ -100,9 +101,11 @@ public class Lexer
 		return Encoding.UTF8.GetString(_input[startPosition..(_position)]);
 	}
 
+
 	private int ReadInteger()
 	{
 		int startPosition = _position;
+		// TODO: Improve this - also seems janky
 		while (_currentChar != '.' && _currentChar != '\0' && Char.IsAsciiDigit(_currentChar))
 		{
 			ReadByte();

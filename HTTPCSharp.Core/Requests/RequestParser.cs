@@ -35,26 +35,29 @@ public class RequestParser
 
 	public Request Parse()
 	{
-		
-
-		// while (_currentToken.TokenType != TokenEnum.CarriageReturn && _peekToken.TokenType != TokenEnum.LineFeed)
-		// {
 		RequestLine requestLine = ParseRequestLine();
-		// }
-
+		
 		return new Request(requestLine);
 	}
 
 	private RequestLine ParseRequestLine()
 	{
 		RequestMethodEnum method = ParseHttpMethod();
-		
-		string requestUri = _currentToken.TokenLiteral;
-		
+
+		string requestUri = "";
 		NextToken(); // SP
 
-		HttpVersion httpVersion = ParseHttpVersion();
+		while (_currentToken.TokenType != TokenEnum.Space)
+		{
+			Console.WriteLine($"Current Token: '{_currentToken.TokenLiteral}' - {_currentToken.TokenType}");
+			requestUri += _currentToken.TokenLiteral;
+			NextToken();
+			Console.WriteLine($"Current URI String: '{requestUri}'");
+		}
+		NextToken();
+		NextToken();
 		
+		HttpVersion httpVersion = ParseHttpVersion();
 		NextToken(); // LF
 		
 		return new RequestLine(method, requestUri, httpVersion);
@@ -71,20 +74,23 @@ public class RequestParser
 			throw new Exception("INVALID HTTP METHOD");
 		}
 		
-		NextToken();
-		
 		return method;
+	}
+
+	private RequestUri ParseRequestUri()
+	{
+		return new RequestUri();
 	}
 
 	public HttpVersion ParseHttpVersion()
 	{
-		NextToken(); // Move to HTTP
-		NextToken(); // Move to major version
+		// NextToken(); // Move to HTTP
+		// NextToken(); // Move to major version
 		int majorVersion = int.Parse(_currentToken.TokenLiteral);
-		
 		NextToken(); // Move to dot
 		
 		int minorVersion  = int.Parse(_currentToken.TokenLiteral);
+		NextToken();
 		
 		return new HttpVersion(majorVersion, minorVersion);
 	}

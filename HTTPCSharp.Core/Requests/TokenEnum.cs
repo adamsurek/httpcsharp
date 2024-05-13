@@ -9,7 +9,7 @@ public enum TokenEnum
 	HorizontalTab = '\t',
 	LineFeed = '\n',
 	CarriageReturn = '\r',
-	Space = ' ',
+	Space = '\u0020',
 	Colon = ':',
 	Semicolon = ';',
 	Slash = '/',
