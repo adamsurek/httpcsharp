@@ -39,9 +39,17 @@ public class HttpServer
 			// var requestLine = requestParser.Parse().RequestLine;
 
 			RequestParser parser = new(buffer);
-			RequestLine requestLine = parser.Parse().RequestLine;
+			Request request = parser.Parse();
+			RequestLine requestLine = request.RequestLine;
 			
 			Console.WriteLine($"Request Method: {requestLine.Method}\tURI: path - {requestLine.RequestUri.Path}, query - {requestLine.RequestUri.Query}\tVersion: {requestLine.HttpVersion}");
+			
+			foreach (RequestHeader header in request.RequestHeaders)
+			{
+				Console.WriteLine($"Header Type: '{header.HeaderType}' - Header Value: '{header.HeaderValue}'");
+			}
+			
+			Console.WriteLine($"Body: '{request.RequestBody}'");
 			
 			string responseString = $"HTTP/1.1 200 OK \r\nComment: Test\r\n\r\n{message}\r\n";
 			byte[] response = Encoding.UTF8.GetBytes(responseString);

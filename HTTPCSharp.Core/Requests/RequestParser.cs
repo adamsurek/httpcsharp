@@ -1,15 +1,29 @@
 ﻿using System.Text;
+using System.Xml;
 
 namespace HTTPCSharp.Core.Requests;
 
 public class RequestParser
 {
-	private byte[] _requestBuffer;
+	private readonly byte[] _requestBuffer;
 	private int _currentByteIndex;
 	private byte _currentByte;
 	private byte _nextByte;
+
+	private const byte Null = 0;
+	private const byte HorizontalTab = 9;
+	private const byte LineFeed = 10;
+	private const byte CarriageReturn = 13;
+	private const byte Space = 32;
+	private const byte Pound = 35;
+	private const byte Asterisk = 42;
+	private const byte Dot = 46;
+	private const byte ForwardSlash = 47;
+	private const byte Colon = 58;
+	private const byte Semicolon = 59;
+	private const byte QuestionMark = 63;
 	
-	private Dictionary<string, RequestMethodEnum> _requestMethodMap = new()
+	private readonly Dictionary<string, RequestMethodEnum> _requestMethodMap = new()
 	{
 		{ "OPTIONS", RequestMethodEnum.Options },
 		{ "GET", RequestMethodEnum.Get },
@@ -31,10 +45,41 @@ public class RequestParser
 
 	public Request Parse()
 	{
-		Console.WriteLine("### PARSER ATTEMPT TWO ###");
 		RequestLine requestLine = ParseRequestLine();
+		
+		NextByte(); // CR
+		NextByte(); // LF
 
-		return new Request(requestLine);
+		List<RequestHeader> requestHeaders = new();
+
+		while (true)
+		{
+			if (_nextByte == CarriageReturn)
+			{
+				NextByte();
+				NextByte();
+
+				// When the header section ends, there are two sets of CRLF. If the current
+				// byte is a LF and the next byte is a LF, we have reached the body.
+				if (_currentByte == LineFeed && _nextByte == CarriageReturn)
+				{
+					NextByte();
+					NextByte();
+					break;
+				}
+			}
+			
+			RequestHeader requestHeader = ParseRequestHeader();
+			requestHeaders.Add(requestHeader);
+		}
+			
+		string? requestBody = null;
+		if (_currentByteIndex <= _requestBuffer.Length && _currentByte != Null || _nextByte != Null)
+		{
+			requestBody = ParseRequestBody();
+		}
+		
+		return new Request(requestLine, requestHeaders, requestBody);
 	}
 	
 	private RequestLine ParseRequestLine()
@@ -53,13 +98,13 @@ public class RequestParser
 
 	private RequestMethodEnum ParseHttpMethod()
 	{
-		while (_currentByte == 32 || _currentByte == 9)
+		while (_currentByte == Space || _currentByte == HorizontalTab)
 		{
 			NextByte();
 		}
 
 		int startIndex = _currentByteIndex;
-		while (_nextByte != 32 && _currentByteIndex < _requestBuffer.Length)
+		while (_nextByte != Space && _currentByteIndex < _requestBuffer.Length)
 		{
 			NextByte();
 		}
@@ -85,7 +130,7 @@ public class RequestParser
 
 	private RequestUri ParseRequestUri()
 	{
-		if (_currentByte == 42)
+		if (_currentByte == Asterisk)
 		{
 			NextByte();
 			return new RequestUri(null, null, -1, "*", null, null);
@@ -97,7 +142,7 @@ public class RequestParser
 		// }
 
 		string? query = null;
-		if (_nextByte == 63)
+		if (_nextByte == QuestionMark)
 		{
 			NextByte();
 			query = ParseUriQuery();
@@ -110,7 +155,7 @@ public class RequestParser
 	private string ParseUriPath()
 	{
 		int startIndex = _currentByteIndex;
-		while (_nextByte != 32 && _nextByte != 63 && _nextByte != 35)
+		while (_nextByte != Space && _nextByte != QuestionMark && _nextByte != Pound)
 		{
 			NextByte();
 		}
@@ -121,7 +166,7 @@ public class RequestParser
 	private string ParseUriQuery()
 	{
 		int startIndex = _currentByteIndex;
-		while (_nextByte != 32 && _nextByte != 35)
+		while (_nextByte != Space && _nextByte != Pound)
 		{
 			NextByte();
 		}
@@ -132,7 +177,7 @@ public class RequestParser
 	private HttpVersion ParseHttpVersion()
 	{
 		int startIndex = _currentByteIndex;
-		while (_nextByte != 47 && _currentByteIndex < _requestBuffer.Length)
+		while (_nextByte != ForwardSlash && _currentByteIndex < _requestBuffer.Length)
 		{
 			NextByte();
 		}
@@ -146,7 +191,7 @@ public class RequestParser
 		NextByte();
 		
 		startIndex = _currentByteIndex;
-		while (_nextByte != 46 && _currentByteIndex < _requestBuffer.Length)
+		while (_nextByte != Dot && _currentByteIndex < _requestBuffer.Length)
 		{
 			NextByte();
 		}
@@ -155,7 +200,7 @@ public class RequestParser
 		NextByte();
 		
 		startIndex = _currentByteIndex;
-		while (_nextByte != 13 && _currentByteIndex < _requestBuffer.Length)
+		while (_nextByte != CarriageReturn && _currentByteIndex < _requestBuffer.Length)
 		{
 			NextByte();
 		}
@@ -163,5 +208,42 @@ public class RequestParser
 		int minorVersion = int.Parse(_requestBuffer.AsSpan()[startIndex.._currentByteIndex]);
 
 		return new HttpVersion(majorVersion, minorVersion);
+	}
+
+	private RequestHeader ParseRequestHeader()
+	{
+		int startIndex = _currentByteIndex;
+		while (_nextByte != Colon)
+		{
+			NextByte();
+		}
+
+		string headerType = Encoding.ASCII.GetString(_requestBuffer[startIndex.._currentByteIndex]);
+
+		while (_nextByte == Colon || _nextByte == Space || _nextByte == HorizontalTab)
+		{
+			NextByte();
+		}
+
+		startIndex = _currentByteIndex;
+		while (_nextByte != CarriageReturn)
+		{
+			NextByte();
+		}
+		
+		string headerValue = Encoding.ASCII.GetString(_requestBuffer[startIndex.._currentByteIndex]);
+
+		return new RequestHeader(headerType, headerValue);
+	}
+
+	private string ParseRequestBody()
+	{
+		int startIndex = _currentByteIndex;
+		while (_currentByte != Null && _nextByte != Null && _currentByteIndex + 1 < _requestBuffer.Length)
+		{
+			NextByte();
+		}
+		
+		return Encoding.ASCII.GetString(_requestBuffer[startIndex.._currentByteIndex]);
 	}
 }
