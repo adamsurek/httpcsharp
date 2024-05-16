@@ -26,4 +26,8 @@
       <ProjectReference Include="..\HTTPCSharp.Core\HTTPCSharp.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Responses\" />
+    </ItemGroup>
+
 </Project>

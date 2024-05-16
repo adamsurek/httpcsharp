@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 using HTTPCSharp.Core.Requests;
+using HTTPCSharp.Core.Responses;
 
 namespace HTTPCSharp.Core.Server;
 
@@ -33,11 +34,8 @@ public class HttpServer
 			int received = client.Receive(buffer, SocketFlags.None);
 			message += Encoding.UTF8.GetString(buffer, 0, received);
 			Console.WriteLine($"Received >> \n{message}");
-
-			// Lexer lexer = new(buffer);
-			// RequestParser requestParser = new(lexer);
-			// var requestLine = requestParser.Parse().RequestLine;
-
+			
+			/* REQUEST DATA */
 			RequestParser parser = new(buffer);
 			Request request = parser.Parse();
 			RequestLine requestLine = request.RequestLine;
@@ -50,10 +48,17 @@ public class HttpServer
 			}
 			
 			Console.WriteLine($"Body: '{request.RequestBody}'");
+			/* END REQUEST DATA */
 			
-			string responseString = $"HTTP/1.1 200 OK \r\nComment: Test\r\n\r\n{message}\r\n";
-			byte[] response = Encoding.UTF8.GetBytes(responseString);
-			client.Send(response);
+			/* RESPONSE DATA */
+			// string responseString = $"HTTP/1.1 200 OK \r\nComment: Test\r\n\r\n{message}\r\n";
+			Response response = RequestEvaluator.EvaluateRequest(request);
+			
+			Console.WriteLine($"\r\nRESPONSE: {response}");
+			
+			byte[] encodedResponse = Encoding.UTF8.GetBytes(response.ToString());
+			client.Send(encodedResponse);
+			/* END RESPONSE DATA */
 			
 			client.Shutdown(SocketShutdown.Both);	
 			client.Close();
