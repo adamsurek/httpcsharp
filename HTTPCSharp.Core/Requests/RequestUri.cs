@@ -53,4 +53,9 @@ public class RequestUri
 
 		return builder.ToString();
 	}
+
+	public string ToFilePath()
+	{
+		return Path.Replace("/", "\\")[1..];
+	}
 }

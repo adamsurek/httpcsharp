@@ -114,7 +114,7 @@ public class RequestParser
 
 		if (!isValidMethod)
 		{
-			throw new Exception($"INVALID HTTP METHOD - '{translatedMethod}'");
+			method = RequestMethodEnum.Unknown;
 		}
 		
 		NextByte(); // Skip space
@@ -136,10 +136,7 @@ public class RequestParser
 			return new RequestUri(null, null, -1, "*", null, null);
 		}
 
-		// if (_currentByte == 47)
-		// {
 		string path = ParseUriPath();
-		// }
 
 		string? query = null;
 		if (_nextByte == QuestionMark)

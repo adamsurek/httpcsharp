@@ -10,4 +10,5 @@ public enum RequestMethodEnum
 	Delete,
 	Trace,
 	Connect,
+	Unknown
 }
