@@ -51,7 +51,6 @@ public class HttpServer
 			/* END REQUEST DATA */
 			
 			/* RESPONSE DATA */
-			// string responseString = $"HTTP/1.1 200 OK \r\nComment: Test\r\n\r\n{message}\r\n";
 			Response response = RequestEvaluator.EvaluateRequest(request);
 			
 			Console.WriteLine($"\r\nRESPONSE: {response}");
