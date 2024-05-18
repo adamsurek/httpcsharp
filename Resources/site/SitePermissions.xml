@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HttpResources>
+    <HttpResource name="/home">
+        <AllowedRequestMethods>
+            <Method>OPTIONS</Method>
+            <Method>GET</Method>
+            <Method>HEAD</Method>
+        </AllowedRequestMethods>
+    </HttpResource>
+    <HttpResource name="/test">
+       <AllowedRequestMethods>
+            <Method>OPTIONS</Method>
+            <Method>GET</Method>
+            <Method>HEAD</Method>
+       </AllowedRequestMethods>
+        <HttpResource name="/test/posted-files">
+            <AllowedRequestMethods>
+                <Method>OPTIONS</Method>
+                <Method>GET</Method>
+                <Method>HEAD</Method>
+                <Method>POST</Method>
+                <Method>DELETE</Method>
+            </AllowedRequestMethods>
+        </HttpResource>
+    </HttpResource>
+</HttpResources>
