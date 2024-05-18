@@ -1,18 +1,20 @@
-﻿namespace HTTPCSharp.Core.Responses;
+﻿using HTTPCSharp.Core.Requests;
+
+namespace HTTPCSharp.Core.Responses;
 
 public class ResponseHeader
 {
-	public readonly string HeaderType;
+	public readonly HeaderField HeaderField;
 	public readonly string HeaderValue;
 
-	public ResponseHeader(string headerType, string headerValue)
+	public ResponseHeader(HeaderFieldTypeEnum fieldType, string headerValue)
 	{
-		HeaderType = headerType;
+		HeaderField = new HeaderField(fieldType);
 		HeaderValue = headerValue;
 	}
 
 	public override string ToString()
 	{
-		return $"{HeaderType}: {HeaderValue}\r\n";
+		return $"{HeaderField.Name}: {HeaderValue}\r\n";
 	}
 }
