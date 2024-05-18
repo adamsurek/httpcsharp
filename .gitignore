@@ -34,3 +34,5 @@ _UpgradeReport_Files/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+Resources/site/test/posted-files/*

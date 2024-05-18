@@ -1,0 +1,12 @@
+{
+	"header": "HTTP/1.1 Implementation in C#",
+	"text": "This is a JSON file that can be retrieved using a GET request.",
+	"field1": {
+		"subField1": 123
+	},
+	"field2": [
+		1,
+		2,
+		3
+	]
+}
