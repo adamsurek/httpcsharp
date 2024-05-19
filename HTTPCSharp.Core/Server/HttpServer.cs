@@ -23,7 +23,7 @@ public class HttpServer
 
 		while (true)
 		{
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[4096];
 			string message = "";
 			
 			Console.WriteLine("Awaiting connection...");
@@ -53,9 +53,10 @@ public class HttpServer
 			/* RESPONSE DATA */
 			Response response = RequestEvaluator.EvaluateRequest(request);
 			
-			Console.WriteLine($"\r\nRESPONSE: {response}");
+			// Console.WriteLine($"\r\nRESPONSE: {response}");
 			
-			byte[] encodedResponse = Encoding.UTF8.GetBytes(response.ToString());
+			byte[] encodedResponse = Encoding.ASCII.GetBytes(response.ToString());
+			
 			client.Send(encodedResponse);
 			/* END RESPONSE DATA */
 			
