@@ -1,19 +1,48 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <HttpResources>
-    <HttpResource name="/home">
+    <HttpResource name="/home" type="Directory">
         <AllowedRequestMethods>
             <Method>OPTIONS</Method>
             <Method>GET</Method>
             <Method>HEAD</Method>
         </AllowedRequestMethods>
+        <HttpResource name="/home/home.html" type="File">
+            <AllowedRequestMethods>
+                <Method>OPTIONS</Method>
+                <Method>GET</Method>
+                <Method>HEAD</Method>
+            </AllowedRequestMethods>
+            <FileProperties>
+                <FileExtension>html</FileExtension>
+                <MIMEType>text/html</MIMEType>
+            </FileProperties>
+        </HttpResource>
+        <HttpResource name="/home/home.html.js" type="File">
+            <AllowedRequestMethods>
+                <Method>GET</Method>
+            </AllowedRequestMethods>
+            <FileProperties>
+                <FileExtension>js</FileExtension>
+                <MIMEType>text/javascript</MIMEType>
+            </FileProperties>
+        </HttpResource>
+        <HttpResource name="/home/hubble-hptau-wfc3-1-flat-finalok.jpg" type="File">
+            <AllowedRequestMethods>
+                <Method>GET</Method>
+            </AllowedRequestMethods>
+            <FileProperties>
+                <FileExtension>jpg</FileExtension>
+                <MIMEType>image/jpeg</MIMEType>
+            </FileProperties>
+        </HttpResource>
     </HttpResource>
-    <HttpResource name="/test">
+    <HttpResource name="/test" type="Directory">
        <AllowedRequestMethods>
             <Method>OPTIONS</Method>
             <Method>GET</Method>
             <Method>HEAD</Method>
        </AllowedRequestMethods>
-        <HttpResource name="/test/posted-files">
+        <HttpResource name="/test/posted-files" type="Directory">
             <AllowedRequestMethods>
                 <Method>OPTIONS</Method>
                 <Method>GET</Method>
@@ -21,6 +50,50 @@
                 <Method>POST</Method>
                 <Method>DELETE</Method>
             </AllowedRequestMethods>
+        </HttpResource>
+        <HttpResource name="/test/csv-get-test.csv" type="File">
+            <AllowedRequestMethods>
+                <Method>OPTIONS</Method>
+                <Method>GET</Method>
+                <Method>HEAD</Method>
+            </AllowedRequestMethods>
+            <FileProperties>
+                <FileExtension>csv</FileExtension>
+                <MIMEType>text/csv</MIMEType>
+            </FileProperties>
+        </HttpResource>
+        <HttpResource name="/test/image-get-test.png" type="File">
+            <AllowedRequestMethods>
+                <Method>OPTIONS</Method>
+                <Method>GET</Method>
+                <Method>HEAD</Method>
+            </AllowedRequestMethods>
+            <FileProperties>
+                <FileExtension>png</FileExtension>
+                <MIMEType>image/png</MIMEType>
+            </FileProperties>
+        </HttpResource>
+        <HttpResource name="/test/json-get-test.json" type="File">
+            <AllowedRequestMethods>
+                <Method>OPTIONS</Method>
+                <Method>GET</Method>
+                <Method>HEAD</Method>
+            </AllowedRequestMethods>
+            <FileProperties>
+                <FileExtension>json</FileExtension>
+                <MIMEType>application/json</MIMEType>
+            </FileProperties>
+        </HttpResource>
+        <HttpResource name="/test/text-get-test.txt" type="File">
+            <AllowedRequestMethods>
+                <Method>OPTIONS</Method>
+                <Method>GET</Method>
+                <Method>HEAD</Method>
+            </AllowedRequestMethods>
+            <FileProperties>
+                <FileExtension>txt</FileExtension>
+                <MIMEType>text/plain</MIMEType>
+            </FileProperties>
         </HttpResource>
     </HttpResource>
 </HttpResources>
