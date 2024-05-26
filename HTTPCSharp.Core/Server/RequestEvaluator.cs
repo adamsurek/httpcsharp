@@ -1,6 +1,8 @@
 ﻿using System.Net.Mime;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using HTTPCSharp.Core.Requests;
 using HTTPCSharp.Core.Responses;
 
@@ -11,7 +13,7 @@ public static class RequestEvaluator
 	private static readonly string RootDirectory = Directory.GetParent(Environment.CurrentDirectory)!.Parent!.Parent!.Parent!.FullName;
 	private static readonly string ResourcesPath = Path.Combine(RootDirectory, "Resources", "site");
 	
-	public static Response EvaluateRequest(Request request)
+	public static async Task<Response> EvaluateRequestAsync(Request request)
 	{
 		// TODO: Validate request 
 			// TODO: Validate URI
@@ -26,11 +28,11 @@ public static class RequestEvaluator
 		switch (request.RequestLine.Method)
 		{
 			case RequestMethodEnum.Options:
-				response = HandleOptionsRequest(request.RequestLine.RequestUri);
+				response = await HandleOptionsRequestAsync(request.RequestLine.RequestUri);
 				break;
 			
 			case RequestMethodEnum.Get:
-				response = HandleGetRequest(request);
+				response = await HandleGetRequestAsync(request);
 				break;
 			
 			default:
@@ -44,14 +46,14 @@ public static class RequestEvaluator
 	}
 
 
-	private static Response HandleOptionsRequest(RequestUri uri)
+	private static async Task<Response> HandleOptionsRequestAsync(RequestUri uri)
 	{
 		List<ResponseHeader> headers = AddGenericHeaders();
 		string? resourcePath = GetResourcePath(uri.ToFilePath());
 
 		if (resourcePath != null)
 		{
-			List<RequestMethodEnum> allowedMethods = CheckAllowedRequestMethods(uri.Path);
+			List<RequestMethodEnum> allowedMethods = await CheckAllowedRequestMethodsAsync(uri.Path);
 			
 			headers.Add(new ResponseHeader(HeaderFieldTypeEnum.Allow, string.Join(", ", allowedMethods).ToUpper()));
 			return new Response(new StatusLine(StatusCodesEnum.Ok, "OK"), headers, $"OPTIONS request made to '{uri}'\n");
@@ -81,7 +83,7 @@ public static class RequestEvaluator
 
 		return null;
 	}
-	
+
 	private static InternalResource GetResourceInformation(string path)
 	{
 		List<RequestMethodEnum> allowedMethods = new();
@@ -162,6 +164,93 @@ public static class RequestEvaluator
 
 		return new InternalResource(Path.Combine(ResourcesPath, path), resourceType, resourceMimeType, allowedMethods);
 	}
+	
+	private static async Task<InternalResource> GetResourceInformationAsync(string path)
+	{
+		List<RequestMethodEnum> allowedMethods = new();
+
+		XmlReaderSettings readerSettings = new();
+		readerSettings.Async = true;
+		
+		XmlReader reader = XmlReader.Create(Path.Combine(ResourcesPath, "SitePermissions.xml"), readerSettings);
+		XDocument xml = await XDocument.LoadAsync(reader, LoadOptions.None, CancellationToken.None);
+		
+		XElement? resourceNode = xml.Root!.XPathSelectElement($"//HttpResource[@name='{path}']");
+		// XElement? resourceNode = xml.Root!.Element($"HttpResource[@name='{path}']");
+		
+		if (resourceNode is null)
+		{
+			throw new Exception($"SITE PERMISSIONS XML IS MISSING RESOURCE NODE '{path}'");
+		}
+
+		if (resourceNode.Attribute("type") is null)
+		{
+			throw new Exception($"RESOURCE NODE IS MISSING TYPE ATTRIBUTE: '{resourceNode.Name}'");
+		}
+		
+		string resourceTypeAttribute = (string)resourceNode.Attribute("type")!;
+		
+		bool isValidResourceType = ResourceTypeEnum.TryParse(resourceTypeAttribute, true, out ResourceTypeEnum resourceType);
+
+		if (!isValidResourceType)
+		{
+			throw new Exception($"INVALID RESOURCE TYPE: '{resourceTypeAttribute}'");
+		}
+		
+		XElement? filePropertiesNode = resourceNode.Element("FileProperties");
+		
+		if (filePropertiesNode is null)
+		{
+			throw new Exception($"FILE RESOURCE IS MISSING FILE PROPERTIES NODE: '{resourceNode.Name}'");
+		}
+
+		XElement? fileMimeTypeNode = filePropertiesNode.Element("MIMEType");
+		
+		if (fileMimeTypeNode is null)
+		{
+			throw new Exception($"FILE RESOURCE IS MISSING MIME TYPE NODE: '{filePropertiesNode.Name}'");
+		}
+		
+		MimeType resourceMimeType = new(fileMimeTypeNode.Value);
+		
+		// bool isValidMimeType = MimeTypeEnum.TryParse(mimeTypeText, true, out resourceMimeType);
+		// if (!isValidMimeType)
+		// {
+		// 	throw new Exception($"INVALID RESOURCE TYPE: '{resourceTypeAttribute}'");
+		// }
+		
+
+		IEnumerable<XElement> methodNodes = resourceNode.Elements("AllowedRequestMethods").First().Elements("Method");
+
+		if (!methodNodes.ToList().Any())
+		{
+			allowedMethods.Add(RequestMethodEnum.Options);
+		}
+		else
+		{
+			foreach (XElement methodNode in methodNodes)
+			{
+				if (methodNode.Value is null)
+				{
+					throw new Exception($"METHOD NODE IS MISSING VALUE: '{methodNode.Value}'");
+				}
+
+				string methodNodeValue = methodNode.Value;
+				RequestMethodEnum method;
+			
+				bool isValidRequestMethod = RequestMethodEnum.TryParse(methodNodeValue, ignoreCase: true, out method);
+			
+				if (!isValidRequestMethod)
+				{
+					throw new Exception($"UNHANDLED REQUEST METHOD: '{method}'");
+				}
+			
+				allowedMethods.Add(method);
+			}
+		}
+
+		return new InternalResource(Path.Combine(ResourcesPath, path), resourceType, resourceMimeType, allowedMethods);
+	}
 
 	private static List<RequestMethodEnum> CheckAllowedRequestMethods(string path)
 	{
@@ -211,7 +300,56 @@ public static class RequestEvaluator
 		return allowedMethods;
 	}
 
-	private static Response HandleGetRequest(Request request)
+	public static async Task<List<RequestMethodEnum>> CheckAllowedRequestMethodsAsync(string path)
+	{
+		List<RequestMethodEnum> allowedMethods = new();
+
+		XmlReader reader = XmlReader.Create(Path.Combine(ResourcesPath, "SitePermissions.xml"));
+		XDocument xml = await XDocument.LoadAsync(reader, LoadOptions.None, CancellationToken.None);
+
+		XElement? resourceNode = xml.Root!.Element($"//HttpResource[@name='{path}']");
+		
+		if (resourceNode is null)
+		{
+			throw new Exception($"SITE PERMISSIONS XML IS MISSING RESOURCE NODE '{path}'");
+		}
+
+		IEnumerable<XElement> methodNodes = resourceNode.Elements("AllowedRequestMethods").Elements("Method");
+
+		if (!methodNodes.ToList().Any())
+		{
+			allowedMethods.Add(RequestMethodEnum.Options);
+			return allowedMethods;
+		}
+		
+		Console.WriteLine(string.Join("\n", methodNodes.Count()));
+
+		foreach (XElement methodNode in methodNodes)
+		{
+			if (methodNode.Value is null)
+			{
+				throw new Exception($"METHOD NODE IS MISSING VALUE: '{methodNode.Value}'");
+			}
+
+			string methodNodeValue = methodNode.Value;
+			RequestMethodEnum method;
+			
+			bool isValidRequestMethod = RequestMethodEnum.TryParse(methodNodeValue, ignoreCase: true, out method);
+			
+			if (!isValidRequestMethod)
+			{
+				throw new Exception($"UNHANDLED REQUEST METHOD: '{method}'");
+			}
+			
+			Console.WriteLine($"PARSED METHOD: {method}");
+			allowedMethods.Add(method);
+		}
+
+		return allowedMethods;
+		
+	}
+
+	private static async Task<Response> HandleGetRequestAsync(Request request)
 	{
 		List<ResponseHeader> headers = new()
 		{
@@ -222,8 +360,7 @@ public static class RequestEvaluator
 
 		if (resourcePath != null)
 		{
-			// List<RequestMethodEnum> allowedMethods = CheckAllowedRequestMethods(request.RequestLine.RequestUri.Path);
-			InternalResource resource = GetResourceInformation(request.RequestLine.RequestUri.Path);
+			InternalResource resource = await GetResourceInformationAsync(request.RequestLine.RequestUri.Path);
 
 			if (!resource.AllowedRequestMethods.Contains(RequestMethodEnum.Get))
 			{
@@ -235,11 +372,11 @@ public static class RequestEvaluator
 			string body;
 			if (resource.MimeType.Name.StartsWith("image"))
 			{
-				body = Encoding.ASCII.GetString(File.ReadAllBytes(resourcePath));
+				body = Encoding.ASCII.GetString(await File.ReadAllBytesAsync(resourcePath));
 			}
 			else
 			{
-				 body = File.ReadAllText(resourcePath);
+				 body = await File.ReadAllTextAsync(resourcePath);
 			}
 			headers.Add(new ResponseHeader(HeaderFieldTypeEnum.ContentLength, body.Length.ToString()));
 			headers.Add(new ResponseHeader(HeaderFieldTypeEnum.AcceptRanges, "bytes"));

@@ -12,7 +12,7 @@ public class HttpServer
 	public readonly int ServerPort = 42069;
 	private Socket? _listener;
 	
-	public void Listen()
+	public async Task Listen()
 	{
 		IPEndPoint endPoint = new (ServerIp, ServerPort);
 		_listener = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -23,20 +23,36 @@ public class HttpServer
 
 		while (true)
 		{
-			byte[] buffer = new byte[4096];
-			string message = "";
 			
 			Console.WriteLine("Awaiting connection...");
 			
-			Socket client = _listener.Accept();
+			Socket client = await _listener.AcceptAsync();
 			Console.WriteLine($"Client Connected: {client.Connected}");
 
-			int received = client.Receive(buffer, SocketFlags.None);
+			_ = Task.Run(() => HandleRequestAsync(client));
+
+			// await HandleRequestAsync(client);
+
+			// await HandleRequestAsyncDummy(client);
+		}
+	}
+
+	private async Task HandleRequestAsync(Socket handler)
+	{
+			byte[] buffer = new byte[4096];
+			string message = "";
+			
+			int received = await handler.ReceiveAsync(buffer, SocketFlags.None);
 			message += Encoding.UTF8.GetString(buffer, 0, received);
 			Console.WriteLine($"Received >> \n{message}");
 			
+			// RANDOM SLEEP FOR ASYNC TESTS
+			Random rnd = new();
+			await Task.Delay(rnd.Next(3000,7000));
+			
 			/* REQUEST DATA */
 			RequestParser parser = new(buffer);
+			
 			Request request = parser.Parse();
 			RequestLine requestLine = request.RequestLine;
 			
@@ -51,17 +67,41 @@ public class HttpServer
 			/* END REQUEST DATA */
 			
 			/* RESPONSE DATA */
-			Response response = RequestEvaluator.EvaluateRequest(request);
+			Response response = await RequestEvaluator.EvaluateRequestAsync(request);
 			
 			// Console.WriteLine($"\r\nRESPONSE: {response}");
 			
 			byte[] encodedResponse = Encoding.ASCII.GetBytes(response.ToString());
 			
-			client.Send(encodedResponse);
+			
+			await handler.SendAsync(encodedResponse);
 			/* END RESPONSE DATA */
 			
-			client.Shutdown(SocketShutdown.Both);	
-			client.Close();
-		}
+			handler.Shutdown(SocketShutdown.Both);	
+			handler.Close();
 	}
+
+
+	private async Task HandleRequestAsyncDummy(Socket handler)
+	{
+		byte[] buffer = new byte[4096];
+		string message = "";
+
+		int received = await handler.ReceiveAsync(buffer, SocketFlags.None);
+		message += Encoding.UTF8.GetString(buffer, 0, received);
+		Console.WriteLine($"Received >> \n{message}");
+
+		// RANDOM SLEEP FOR ASYNC TESTS
+		Random rnd = new();
+		await Task.Delay(rnd.Next(3000, 7000));
+
+		byte[] encodedResponse = "HTTP/1.1 200 OK"u8.ToArray();
+		
+		await handler.SendAsync(encodedResponse);
+		/* END RESPONSE DATA */
+			
+		handler.Shutdown(SocketShutdown.Both);	
+		handler.Close();
+	}
+	
 }

@@ -4,11 +4,11 @@ namespace HTTPCSharp.CLI;
 
 class Program
 {
-	static void Main(string[] args)
+	static async Task Main(string[] args)
 	{
 		HttpServer server = new();
 		Console.WriteLine($"Server Initialized: {server.ServerIp}\tPort: {server.ServerPort}");
 		
-		server.Listen();
+		await server.Listen();
 	}
 }
