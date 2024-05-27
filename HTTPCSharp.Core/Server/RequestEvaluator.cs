@@ -4,15 +4,22 @@ using HTTPCSharp.Core.Responses;
 
 namespace HTTPCSharp.Core.Server;
 
-public static class RequestEvaluator
+public class RequestEvaluator
 {
-	private static readonly string RootDirectory = Directory.GetParent(Environment.CurrentDirectory)!.Parent!.Parent!.Parent!.FullName;
-	private static readonly string ResourcesPath = Path.Combine(RootDirectory, "Resources", "site");
+	private readonly string _rootDirectory;
+	private readonly string _resourcesPath;
 	
 	// Load Resources/Site Permissions
-	private static readonly List<InternalResource> InternalResources = ResourceLoader.Load(ResourcesPath);
+	private readonly List<InternalResource> _internalResources;
 
-	public static async Task<Response> EvaluateRequestAsync(Request request)
+	public RequestEvaluator(ServerConfig config)
+	{
+		_rootDirectory = config.RootDirectory;
+		_resourcesPath = config.ResourcesPath;
+		_internalResources = config.InternalResources;
+	}
+
+	public async Task<Response> EvaluateRequestAsync(Request request)
 	{
 		// TODO: Validate request 
 			// TODO: Validate URI
@@ -44,12 +51,12 @@ public static class RequestEvaluator
 		return response;
 	}
 
-	private static Response HandleOptionsRequest(RequestUri uri)
+	private Response HandleOptionsRequest(RequestUri uri)
 	{
 		List<ResponseHeader> headers = AddGenericHeaders();
 
 		InternalResource? resource =
-			InternalResources.Find(resource => resource.ResourcePath == uri.Path);
+			_internalResources.Find(resource => resource.ResourcePath == uri.Path);
 		
 		if (resource is not null)
 		{
@@ -60,7 +67,7 @@ public static class RequestEvaluator
 		return new Response(new StatusLine(StatusCodesEnum.NotFound, "Not Found"), headers, $"OPTIONS request made to '{uri}' - RESOURCE NOT FOUND");
 	}
 
-	private static List<ResponseHeader> AddGenericHeaders()
+	private List<ResponseHeader> AddGenericHeaders()
 	{
 		return new List<ResponseHeader>()
 		{
@@ -70,7 +77,7 @@ public static class RequestEvaluator
 		};
 	}
 
-	private static async Task<Response> HandleGetRequest(RequestUri uri)
+	private async Task<Response> HandleGetRequest(RequestUri uri)
 	{
 		List<ResponseHeader> headers = new()
 		{
@@ -79,7 +86,7 @@ public static class RequestEvaluator
 		};
 		
 		InternalResource? resource =
-			InternalResources.Find(resource => resource.ResourcePath == uri.Path);
+			_internalResources.Find(resource => resource.ResourcePath == uri.Path);
 		
 		if (resource != null)
 		{
@@ -91,7 +98,7 @@ public static class RequestEvaluator
 			}
 
 			string body;
-			string filePath = Path.Combine(ResourcesPath, uri.ToFilePath());
+			string filePath = Path.Combine(_resourcesPath, uri.ToFilePath());
 			if (resource.MimeType.Name.StartsWith("image"))
 			{
 				body = Encoding.ASCII.GetString(await File.ReadAllBytesAsync(filePath));

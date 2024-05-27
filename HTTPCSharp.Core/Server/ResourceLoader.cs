@@ -8,7 +8,6 @@ public static class ResourceLoader
 {
 	public static List<InternalResource> Load(string resourceFilePath)
 	{
-		Console.WriteLine("RESOURCES LOADING!!!!!!!!");
 		List<InternalResource> resources = new();
 		
 		XmlReader reader = XmlReader.Create(Path.Combine(resourceFilePath, "SitePermissions.xml"));
