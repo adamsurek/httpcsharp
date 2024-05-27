@@ -11,7 +11,7 @@ public class HttpServer
 	public readonly IPAddress ServerIp = IPAddress.Loopback;
 	public readonly int ServerPort = 42069;
 	private Socket? _listener;
-	
+
 	public async Task Listen()
 	{
 		IPEndPoint endPoint = new (ServerIp, ServerPort);
@@ -23,17 +23,12 @@ public class HttpServer
 
 		while (true)
 		{
-			
 			Console.WriteLine("Awaiting connection...");
 			
 			Socket client = await _listener.AcceptAsync();
 			Console.WriteLine($"Client Connected: {client.Connected}");
 
 			_ = Task.Run(() => HandleRequestAsync(client));
-
-			// await HandleRequestAsync(client);
-
-			// await HandleRequestAsyncDummy(client);
 		}
 	}
 
@@ -48,7 +43,7 @@ public class HttpServer
 			
 			// RANDOM SLEEP FOR ASYNC TESTS
 			Random rnd = new();
-			await Task.Delay(rnd.Next(3000,7000));
+			await Task.Delay(rnd.Next(500,1000));
 			
 			/* REQUEST DATA */
 			RequestParser parser = new(buffer);
@@ -68,12 +63,7 @@ public class HttpServer
 			
 			/* RESPONSE DATA */
 			Response response = await RequestEvaluator.EvaluateRequestAsync(request);
-			
-			// Console.WriteLine($"\r\nRESPONSE: {response}");
-			
 			byte[] encodedResponse = Encoding.ASCII.GetBytes(response.ToString());
-			
-			
 			await handler.SendAsync(encodedResponse);
 			/* END RESPONSE DATA */
 			
@@ -81,27 +71,4 @@ public class HttpServer
 			handler.Close();
 	}
 
-
-	private async Task HandleRequestAsyncDummy(Socket handler)
-	{
-		byte[] buffer = new byte[4096];
-		string message = "";
-
-		int received = await handler.ReceiveAsync(buffer, SocketFlags.None);
-		message += Encoding.UTF8.GetString(buffer, 0, received);
-		Console.WriteLine($"Received >> \n{message}");
-
-		// RANDOM SLEEP FOR ASYNC TESTS
-		Random rnd = new();
-		await Task.Delay(rnd.Next(3000, 7000));
-
-		byte[] encodedResponse = "HTTP/1.1 200 OK"u8.ToArray();
-		
-		await handler.SendAsync(encodedResponse);
-		/* END RESPONSE DATA */
-			
-		handler.Shutdown(SocketShutdown.Both);	
-		handler.Close();
-	}
-	
 }
