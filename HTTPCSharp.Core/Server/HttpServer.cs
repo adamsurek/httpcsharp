@@ -11,57 +11,52 @@ public class HttpServer
 	public readonly IPAddress ServerIp = IPAddress.Loopback;
 	public readonly int ServerPort = 42069;
 	private Socket? _listener;
-	
-	public void Listen()
+	private ServerConfig _config = ConfigurationManager.Instance.ServerConfig;
+
+	public async Task Listen()
 	{
+		RequestEvaluator evaluator = new(_config);
+		
 		IPEndPoint endPoint = new (ServerIp, ServerPort);
 		_listener = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 		_listener.Bind(endPoint);
-		_listener.Listen(10);
+		_listener.Listen();
 		
 		Console.WriteLine($"Listening at {endPoint}");
 
 		while (true)
 		{
-			byte[] buffer = new byte[4096];
-			string message = "";
-			
-			Console.WriteLine("Awaiting connection...");
-			
-			Socket client = _listener.Accept();
-			Console.WriteLine($"Client Connected: {client.Connected}");
+			Socket client = await _listener.AcceptAsync();
+			_ = Task.Run(() => HandleRequestAsync(client, evaluator));
+		}
+	}
 
-			int received = client.Receive(buffer, SocketFlags.None);
-			message += Encoding.UTF8.GetString(buffer, 0, received);
-			Console.WriteLine($"Received >> \n{message}");
+	private async Task HandleRequestAsync(Socket handler, RequestEvaluator evaluator)
+	{
+			byte[] buffer = new byte[4096];
+			
+			await handler.ReceiveAsync(buffer, SocketFlags.None);
 			
 			/* REQUEST DATA */
 			RequestParser parser = new(buffer);
 			Request request = parser.Parse();
-			RequestLine requestLine = request.RequestLine;
-			
-			Console.WriteLine($"Request Method: {requestLine.Method}\tURI: path - {requestLine.RequestUri.Path}, query - {requestLine.RequestUri.Query}\tVersion: {requestLine.HttpVersion}");
-			
-			foreach (RequestHeader header in request.RequestHeaders)
-			{
-				Console.WriteLine($"Header Type: '{header.HeaderType}' - Header Value: '{header.HeaderValue}'");
-			}
-			
-			Console.WriteLine($"Body: '{request.RequestBody}'");
 			/* END REQUEST DATA */
 			
 			/* RESPONSE DATA */
-			Response response = RequestEvaluator.EvaluateRequest(request);
-			
-			// Console.WriteLine($"\r\nRESPONSE: {response}");
-			
+			Response response = await evaluator.EvaluateRequestAsync(request);
 			byte[] encodedResponse = Encoding.ASCII.GetBytes(response.ToString());
-			
-			client.Send(encodedResponse);
+			byte[]? body = response.ResponseBody;
+
+			// Send status line and headers
+			await handler.SendAsync(encodedResponse, 0);
+		
+			if (body is not null)
+			{
+				await handler.SendAsync(body, 0);
+			}
 			/* END RESPONSE DATA */
 			
-			client.Shutdown(SocketShutdown.Both);	
-			client.Close();
-		}
+			handler.Shutdown(SocketShutdown.Both);	
+			handler.Close();
 	}
 }

@@ -6,9 +6,9 @@ public class Response
 {
 	public StatusLine StatusLine;
 	public List<ResponseHeader> ResponseHeaders;
-	public string? ResponseBody;
+	public byte[]? ResponseBody;
 
-	public Response(StatusLine statusLine, List<ResponseHeader> responseHeaders, string? responseBody = null)
+	public Response(StatusLine statusLine, List<ResponseHeader> responseHeaders, byte[]? responseBody = null)
 	{
 		StatusLine = statusLine;
 		ResponseHeaders = responseHeaders;
@@ -27,7 +27,6 @@ public class Response
 		}
 
 		builder.Append("\r\n");
-		builder.Append(ResponseBody);
 
 		return builder.ToString();
 	}
