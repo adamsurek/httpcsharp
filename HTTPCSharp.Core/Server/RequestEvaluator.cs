@@ -44,7 +44,7 @@ public class RequestEvaluator
 			default:
 				response = new Response(new StatusLine(StatusCodesEnum.NotImplemented, "Not Implemented"),
 					AddGenericHeaders(),
-					$"Unknown HTTP Request Method - '{request.RequestLine.Method}'");
+					Encoding.UTF8.GetBytes($"Unknown HTTP Request Method - '{request.RequestLine.Method}'"));
 				break;
 		}
 
@@ -61,10 +61,10 @@ public class RequestEvaluator
 		if (resource is not null)
 		{
 			headers.Add(new ResponseHeader(HeaderFieldTypeEnum.Allow, string.Join(", ", resource.AllowedRequestMethods).ToUpper()));
-			return new Response(new StatusLine(StatusCodesEnum.Ok, "OK"), headers, $"OPTIONS request made to '{uri}'\n");
+			return new Response(new StatusLine(StatusCodesEnum.Ok, "OK"), headers, Encoding.UTF8.GetBytes($"OPTIONS request made to '{uri}'\n"));
 		}
 		
-		return new Response(new StatusLine(StatusCodesEnum.NotFound, "Not Found"), headers, $"OPTIONS request made to '{uri}' - RESOURCE NOT FOUND");
+		return new Response(new StatusLine(StatusCodesEnum.NotFound, "Not Found"), headers, Encoding.UTF8.GetBytes($"OPTIONS request made to '{uri}' - RESOURCE NOT FOUND"));
 	}
 
 	private List<ResponseHeader> AddGenericHeaders()
@@ -94,26 +94,22 @@ public class RequestEvaluator
 			{
 				headers.Add(new ResponseHeader(HeaderFieldTypeEnum.Allow, string.Join(", ", resource.AllowedRequestMethods).ToUpper()));
 				return new Response(new StatusLine(StatusCodesEnum.MethodNotAllowed, "Method Not Allowed"), headers,
-					$"GET request made to '{uri}' - HTTP METHOD NOT ALLOWED");
+					Encoding.UTF8.GetBytes($"GET request made to '{uri}' - HTTP METHOD NOT ALLOWED"));
 			}
 
-			string body;
+			byte[] body;
 			string filePath = Path.Combine(_resourcesPath, uri.ToFilePath());
-			if (resource.MimeType.Name.StartsWith("image"))
-			{
-				body = Encoding.ASCII.GetString(await File.ReadAllBytesAsync(filePath));
-			}
-			else
-			{
-				 body = await File.ReadAllTextAsync(filePath);
-			}
+			
+			// High LOH memory allocation - chunk file?
+			body = await File.ReadAllBytesAsync(filePath);
+			
 			headers.Add(new ResponseHeader(HeaderFieldTypeEnum.ContentLength, body.Length.ToString()));
 			headers.Add(new ResponseHeader(HeaderFieldTypeEnum.AcceptRanges, "bytes"));
 			headers.Add(new ResponseHeader(HeaderFieldTypeEnum.ContentType, resource.MimeType.Name));
 			return new Response(new StatusLine(StatusCodesEnum.Ok, "OK"), headers, body);
 		}
 		
-		return new Response(new StatusLine(StatusCodesEnum.NotFound, "Not Found"), headers, $"OPTIONS request made to '{uri}' - RESOURCE NOT FOUND");
+		return new Response(new StatusLine(StatusCodesEnum.NotFound, "Not Found"), headers, Encoding.UTF8.GetBytes($"OPTIONS request made to '{uri}' - RESOURCE NOT FOUND"));
 	}
 
 }
