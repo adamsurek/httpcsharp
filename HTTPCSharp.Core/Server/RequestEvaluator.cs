@@ -100,8 +100,15 @@ public class RequestEvaluator
 			byte[] body;
 			string filePath = Path.Combine(_resourcesPath, uri.ToFilePath());
 			
-			// High LOH memory allocation - chunk file?
-			body = await File.ReadAllBytesAsync(filePath);
+			try
+			{
+				body = await ReadFileToBytes(filePath);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
+				throw;
+			}
 			
 			headers.Add(new ResponseHeader(HeaderFieldTypeEnum.ContentLength, body.Length.ToString()));
 			headers.Add(new ResponseHeader(HeaderFieldTypeEnum.AcceptRanges, "bytes"));
@@ -110,6 +117,24 @@ public class RequestEvaluator
 		}
 		
 		return new Response(new StatusLine(StatusCodesEnum.NotFound, "Not Found"), headers, Encoding.UTF8.GetBytes($"OPTIONS request made to '{uri}' - RESOURCE NOT FOUND"));
+	}
+
+	private async Task<byte[]> ReadFileToBytes(string filePath)
+	{
+		FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+		byte[] contents = new byte[stream.Length];
+		int bytesRead;
+		int offset = 0;
+		int chunkSize = int.Min((int)stream.Length, 4096);
+
+		while ((bytesRead = await stream.ReadAsync(contents, offset, chunkSize)) > 0)
+		{
+			offset += bytesRead;
+			chunkSize = int.Min((int)stream.Length - bytesRead, 4096);
+		}
+		
+		stream.Close();
+		return contents;
 	}
 
 }
