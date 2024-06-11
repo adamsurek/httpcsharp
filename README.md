@@ -15,7 +15,7 @@ feature complete implementation of RFC 2616.
   - `OPTION` and `GET` methods are currently available. Support for other methods are in progess
   - Allows for the transfer of text and images
 - Basic file-based routing
-  - `SitePermissions` XML defines available files and request methods
+  - `Resources/SitePermissions` XML defines available files and request methods
   - `Resources` can be fetched
 
 
