@@ -9,7 +9,7 @@ namespace HTTPCSharp.Core.Server;
 public class HttpServer
 {
 	public readonly IPAddress ServerIp = IPAddress.Loopback;
-	public readonly int ServerPort = 42069;
+	public readonly int ServerPort = 44000;
 	private Socket? _listener;
 	private ServerConfig _config = ConfigurationManager.Instance.ServerConfig;
 

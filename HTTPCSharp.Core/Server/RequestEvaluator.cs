@@ -21,15 +21,6 @@ public class RequestEvaluator
 
 	public async Task<Response> EvaluateRequestAsync(Request request)
 	{
-		// TODO: Validate request 
-			// TODO: Validate URI
-			// TODO: Ensure that all required headers were provided
-				// TODO: Validate request body based on headers?
-		// TODO: Route request to handler relevant to URI
-			// TODO: Create URI handlers - 2 or 3 valid base URIs with support for random sub-URIs?
-		// TODO: Process the request with the corresponding handler
-		// TODO: Generate response
-
 		Response response;
 		switch (request.RequestLine.Method)
 		{
